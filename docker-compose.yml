@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  node:
+    build:
+      context: node
+    image: gabrielfabian/desafio_node
+    container_name: node
+    entrypoint: dockerize -wait tcp://mysql:3306 -timeout 20s docker-entrypoint.sh
+    command: bash -c "npm install && node index.js"
+    tty: true
+    networks:
+      - nodenetwork
+    depends_on:
+      - mysql
+      - nginx
+
+  mysql:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: mysql
+    restart: always
+    tty: true
+    environment:
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - nodenetwork
+
+  nginx:
+    build:
+      context: nginx
+    container_name: nginx
+    restart: always
+    ports:
+      - "8080:80"
+    networks:
+      - nodenetwork
+
+
+networks:
+  nodenetwork:
+    driver: bridge
